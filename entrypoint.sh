@@ -4,11 +4,6 @@ if [ ! -z $SECRET_KEY ]; then
   sed -i "s|SECRET_KEY = 'changeme'|SECRET_KEY = '${SECRET_KEY}'|g" /powerdns-admin/config.py
 fi
 
-DB_HOST = '${SQLA_DB_HOST}'
-DB_USER = '${SQLA_DB_USER}'
-DB_NAME = '${SQLA_DB_NAME}'
-DB_PASSWORD = '${SQLA_DB_PASSWORD}'
-
 sed -i "s|LDAP_ENABLED = False|LDAP_ENABLED = True|g" /powerdns-admin/config.py
 
 if [ ! -z $LDAP_TYPE ]; then
@@ -38,9 +33,6 @@ fi
 if [ ! -z $LDAP_FILTER ]; then
   sed -i "s|LDAP_FILTER = '(objectClass=inetorgperson)'|LDAP_FILTER = '${LDAP_FILTER}'|g" /powerdns-admin/config.py
 fi
-
-PDNS_HOST = '${PDNS_STATS_URL}'
-PDNS_API_KEY = '${PDNS_API_KEY}'
 
 cd /powerdns-admin
 
