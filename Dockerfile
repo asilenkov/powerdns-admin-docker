@@ -7,6 +7,8 @@ RUN apk update && \
     apk add --update \
     python \
     python-dev \
+    libxml2-dev \
+    libxslt-dev \
     py-pip \
     libffi-dev \
     openldap-dev \
