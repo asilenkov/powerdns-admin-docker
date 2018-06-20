@@ -75,7 +75,7 @@ fi
 . /app/flask/bin/activate
 
 if [ "${RUNDBCONFIG}"="yes" ]; then
-  python /app/create_db.py
+  python /app/init_data.py
 fi
 
 python /app/run.py
