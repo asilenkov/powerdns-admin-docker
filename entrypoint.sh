@@ -1,8 +1,6 @@
 #!/usr/bin/env sh
 set -eo pipefail
 
-RUNDBCONFIG='no'
-
 if [ ! -z $SECRET_KEY ]; then
   sed -i "s|SECRET_KEY = 'We are the world'|SECRET_KEY = '${SECRET_KEY}'|g" /powerdns-admin/config.py
 fi

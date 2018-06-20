@@ -37,6 +37,6 @@ RUN pip3 install -r requirements.txt
 ADD ./supervisord.conf /etc/supervisord.conf
 ADD . /powerdns-admin/
 COPY ./configs/${ENVIRONMENT}.py /powerdns-admin/config.py
-COPY ./docker/PowerDNS-Admin/entrypoint.sh /entrypoint.sh
+COPY ./entrypoint.sh /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]

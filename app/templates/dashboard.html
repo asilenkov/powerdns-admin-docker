@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+{% block title %}<title>DNS Control Panel - HOME</title>{% endblock %}
+
+{% block dashboard_stat %}
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>
+        Dashboard
+        <small>Info</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="{{ url_for('dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li class="active">Dashboard</li>
+      </ol>
+    </section>
+{% endblock %}
+
+{% block content %}
+ <!-- Main content -->
+    <section class="content">
+      {% if current_user.role.name == 'Administrator' %}
+      <div class="row">
+        <div class="col-xs-3">
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">Statistics</h3>
+                </div>
+                <div class="box-body">
+                  <div class="row">
+                  <div class="col-lg-6">
+                      <!-- small box -->
+                      <div class="small-box bg-aqua">
+                        <div class="inner">
+                          <h3>{{ domain_count }}</h3>
+                          <p>{% if domain_count > 1 %}Domains{% else %}Domain{% endif %}</p>
+                        </div>
+                        <div class="icon">
+                          <i class="fa fa-book"></i>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-6">
+                      <a href="{{ url_for('admin_manageuser') }}">
+                      <div class="small-box bg-green">
+                        <div class="inner">
+                          <h3>{{ users|length }}</h3>
+                          <p>{% if users|length > 1 %}Users{% else %}User{% endif %}</p>
+                        </div>
+                        <div class="icon">
+                          <i class="fa fa-users"></i>
+                        </div>
+                      </div>
+                      </a>
+                    </div>
+                    </div>
+                    <div class="row">
+                    <div class="col-lg-6">
+                      <a href="{{ url_for('admin_history') }}">
+                      <div class="small-box bg-green">
+                        <div class="inner">
+                          <h3>{{ history_number }}</h3>
+                          <p>{% if history_number > 1 %}Histories{% else %}History{% endif %}</p>
+                        </div>
+                        <div class="icon">
+                          <i class="fa fa-calendar"></i>
+                        </div>
+                      </div>
+                      </a>
+                    </div>
+                    <div class="col-lg-6">
+                      <a href="{{ url_for('admin') }}">
+                      <div class="small-box bg-green">
+                        <div class="inner">
+                          <h3><span style="font-size: 18px">{{ uptime|display_second_to_time }}</span></h3>
+                          <p>Uptime</p>
+                        </div>
+                        <div class="icon">
+                          <i class="fa fa-clock-o"></i>
+                        </div>
+                      </div>
+                      </a>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-9">
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">Recent History</h3>
+                </div>
+                <div class="box-body">
+                    <table id="tbl_history" class="table table-bordered table-striped">
+                    <thead>
+                    <tr>
+                      <th>Changed By</th>
+                      <th>Content</th>
+                      <th>Time</th>
+                      <th>Detail</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for history in histories %}
+                            <tr class="odd">
+                                <td>{{ history.created_by }}</td>
+                                <td>{{ history.msg }}</td>
+                                <td>{{ history.created_on }}</td>
+                                <td width="6%">
+                                    <button type="button" class="btn btn-flat btn-primary history-info-button" value='{{ history.detail|replace("[]","None") }}'>
+                                        Info&nbsp;<i class="fa fa-info"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+            </div>
+        </div>
+      </div>
+      {% endif %}
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="box">
+            <div class="box-header">
+              <h3 class="box-title">Hosted Domains</h3>{% if show_bg_domain_button %}<button type="button" class="btn btn-flat btn-primary refresh-bg-button pull-right"><i class="fa fa-refresh"></i> Sync domains </button>{% endif %}
+            </div>
+            <div class="box-body">
+              <table id="tbl_domain_list" class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>DNSSEC</th>
+                  <th>Type</th>
+                  <th>Serial</th>
+                  <th>Master</th>
+                  <th>Account</th>
+                  <th {% if current_user.role.name !='Administrator' %}width="6%"{% else %}width="25%"{% endif %}>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                  <!-- Content loaded via AJAX. -->
+                </tbody>
+              </table>
+            </div>
+            <!-- /.box-body -->
+          </div>
+          <!-- /.box -->
+        </div>
+        <!-- /.col -->
+      </div>
+      <!-- /.row -->
+    </section>
+    <!-- /.content -->
+{% endblock %}
+{% block extrascripts %}
+<script>
+    PDNS_VERSION = '{{ pdns_version }}'
+    // set up history data table
+    $("#tbl_history").DataTable({
+        "paging" : false,
+        "lengthChange" : false,
+        "searching" : false,
+        "ordering" : false,
+        "info" : false,
+        "autoWidth" : false,
+        "columnDefs": [
+            {
+                "render": function ( data, type, row ) {
+                    return moment.utc(data).local().format('YYYY-MM-DD HH:mm:ss');
+                },
+                "targets": 2
+            }
+        ]
+    });
+    // set up domain list
+    $("#tbl_domain_list").DataTable({
+        "paging" : true,
+        "lengthChange" : true,
+        "searching" : true,
+        "ordering" : true,
+        "columnDefs": [
+            { "orderable": false, "targets": [-1] }
+            {% if current_user.role.name != 'Administrator' %},{ "visible": false, "targets": [-2] }{% endif %}
+        ],
+        "processing" : true,
+        "serverSide" : true,
+        "ajax" : "{{ url_for('dashboard_domains') }}",
+        "info" : false,
+        "autoWidth" : false,
+      {% if default_domain_table_size_setting in ['10','25','50','100'] %}
+      "lengthMenu": [ [10, 25, 50, 100, -1],
+                      [10, 25, 50, 100, "All"]],
+      {% else %}
+      "lengthMenu": [ [10, 25, 50, 100, {{ default_domain_table_size_setting }}, -1],
+                      [10, 25, 50, 100, {{ default_domain_table_size_setting }}, "All"]],
+      {% endif %}
+      "pageLength": {{ default_domain_table_size_setting }}
+    });
+    $(document.body).on('click', '.history-info-button', function() {
+        var modal = $("#modal_history_info");
+        var info = $(this).val();
+        $('#modal-code-content').html(json_library.prettyPrint(info));
+        modal.modal('show');
+    });
+
+    $(document.body).on('click', '.refresh-bg-button', function() {
+        var modal = $("#modal_bg_reload");
+        modal.modal('show');
+        reload_domains($SCRIPT_ROOT + '/dashboard-domains-updater');
+    });
+
+    $(document.body).on("click", ".button_template", function (e) {
+        var modal = $("#modal_template");
+        var domain = $(this).prop('id');
+        var form = "    <label for=\"template_name\">Template name</label> \
+                        <input type=\"text\" class=\"form-control\" name=\"template_name\" id=\"template_name\" placeholder=\"Enter a valid template name (required)\"> \
+                        <label for=\"template_description\">Template description</label> \
+                        <input type=\"text\" class=\"form-control\" name=\"template_description\" id=\"template_description\" placeholder=\"Enter a template description (optional)\"> \
+                        <input id=\"domain\" name=\"domain\" type=\"hidden\" value=\""+domain+"\"> \
+                    ";
+        modal.find('.modal-body p').html(form);        
+        modal.find('#button_save').click(function() {                   
+            var data = {};
+            data['name'] = modal.find('#template_name').val();
+            data['description'] = modal.find('#template_description').val();
+            data['domain'] = modal.find('#domain').val();
+            applyChanges(data, $SCRIPT_ROOT + "{{ url_for('create_template_from_zone') }}", true);
+            modal.modal('hide');
+        })
+        modal.find('#button_close').click(function() {
+            modal.modal('hide');
+        })
+        
+        modal.modal('show');
+    });
+
+    {% if current_user.role.name == 'Administrator' or dnssec_adm_only == false %}
+    $(document.body).on("click", ".button_dnssec", function() {
+        var domain = $(this).prop('id');
+        getdnssec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec', domain);
+    });
+
+    $(document.body).on("click", ".button_dnssec_enable", function() {
+        var domain = $(this).prop('id');
+        enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/enable');
+
+    });
+
+    $(document.body).on("click", ".button_dnssec_disable", function() {
+        var domain = $(this).prop('id');
+        enable_dns_sec($SCRIPT_ROOT + '/domain/' + domain + '/dnssec/disable');
+
+    });
+    {% endif %}
+</script>
+{% endblock %}
+{% block modals %}
+<div class="modal fade" id="modal_history_info">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">History Details</h4>
+            </div>
+            <div class="modal-body">
+                <pre><code id="modal-code-content"></code></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-right"
+                    data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<div class="modal fade modal-primary" id="modal_template">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Clone to template</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-left"
+                    id="button_close" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-flat btn-primary" id="button_save">Save</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
+<div class="modal fade" id="modal_dnssec_info">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">DNSSEC</h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-right"
+                    data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
+<div class="modal fade" id="modal_bg_reload">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Sync domains from nameserver</h4>
+            </div>
+            <div class="modal-body">
+
+                <div class="overlay">
+                  <div id="modal_bg_reload_content"><i class="fa fa-refresh fa-spin"></i> Update in progress ..</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-flat btn-default pull-right"
+                    data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+{% endblock %}
