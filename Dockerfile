@@ -1,44 +1,42 @@
-FROM alpine:3.5
+FROM ubuntu:latest
+MAINTAINER Khanh Ngo "k@ndk.name"
+ARG ENVIRONMENT=development
+ENV ENVIRONMENT=${ENVIRONMENT}
 
-MAINTAINER Artem Silenkov <artem.silenkov@gmail.com>
+WORKDIR /powerdns-admin
 
-RUN apk update && \
-    apk add --no-cache git && \
-    apk add --update \
-    python \
-    python-dev \
-    libxml2-dev \
-    libxslt-dev \
-    xmlsec-dev \
-    pkgconfig \
-    py-pip \
-    libffi-dev \
-    openldap-dev \
-    build-base \
-    mariadb-dev && \
-    pip install -U pip && \
-    rm -rf /var/cache/apk/*
+RUN apt-get update -y
+RUN apt-get install -y apt-transport-https
 
-# Install Virtualenv
-RUN pip install virtualenv
+RUN apt-get install -y locales locales-all
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US.UTF-8
 
-RUN git clone https://github.com/ngoduykhanh/PowerDNS-Admin.git /app
+RUN apt-get install -y python3-pip python3-dev supervisor curl
 
-WORKDIR /app
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
 
-RUN virtualenv flask && \
-  source ./flask/bin/activate && \
-  pip install MySQL-python && \
-  pip install -r requirements.txt && \
-  cp config_template.py config.py && \
-  sed -i "s|LOG_FILE = 'logfile.log'|LOG_FILE = ''|g" /app/config.py; \
-  sed -i "s|BASIC_ENABLED = True|BASIC_ENABLED = False|g" /app/config.py; \
-  sed -i "s|SIGNUP_ENABLED = True|SIGNUP_ENABLED = False|g" /app/config.py; \
-  sed -i "s|PDNS_VERSION = '3.4.7'|PDNS_VERSION = '4.0.4'|g" /app/config.py; \
-  sed -i "s|PRETTY_IPV6_PTR = False|PRETTY_IPV6_PTR = True|g" /app/config.py
+# Install yarn
+RUN apt-get update -y
+RUN apt-get install -y yarn
 
-EXPOSE 9393
+# lib for building mysql db driver
+RUN apt-get install -y libmysqlclient-dev
 
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN ln -s usr/local/bin/docker-entrypoint.sh / # backwards compat
-ENTRYPOINT ["docker-entrypoint.sh"]
+# lib for buiding ldap and ssl-based application
+RUN apt-get install -y libsasl2-dev libldap2-dev libssl-dev
+
+# lib for building python3-saml
+RUN apt-get install -y libxml2-dev libxslt1-dev libxmlsec1-dev libffi-dev pkg-config 
+
+COPY ./requirements.txt /powerdns-admin/requirements.txt
+RUN pip3 install -r requirements.txt
+
+ADD ./supervisord.conf /etc/supervisord.conf
+ADD . /powerdns-admin/
+COPY ./configs/${ENVIRONMENT}.py /powerdns-admin/config.py
+COPY ./docker/PowerDNS-Admin/entrypoint.sh /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
