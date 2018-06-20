@@ -1,37 +1,13 @@
 #!/bin/sh
 
 if [ ! -z $SECRET_KEY ]; then
-  sed -i "s|SECRET_KEY = 'We are the world'|SECRET_KEY = '${SECRET_KEY}'|g" /powerdns-admin/config.py
+  sed -i "s|SECRET_KEY = 'changeme'|SECRET_KEY = '${SECRET_KEY}'|g" /powerdns-admin/config.py
 fi
 
-if [ ! -z $PORT ]; then
-  sed -i "s|PORT = 9191|PORT = ${PORT}|g" /powerdns-admin/config.py
-fi
-
-
-if [ ! -z $BIND_ADDRESS ]; then
-  sed -i "s|BIND_ADDRESS = '127.0.0.1'|BIND_ADDRESS = '${BIND_ADDRESS}'|g" /powerdns-admin/config.py
-fi
-
-if [ ! -z $SQLA_DB_USER ]; then
-  sed -i "s|SQLA_DB_USER = 'powerdnsadmin'|SQLA_DB_USER = '${SQLA_DB_USER}'|g" /powerdns-admin/config.py
-  RUNDBCONFIG='yes'
-fi
-
-if [ ! -z $SQLA_DB_PASSWORD ]; then
-  sed -i "s|SQLA_DB_PASSWORD = 'powerdnsadminpassword'|SQLA_DB_PASSWORD = '${SQLA_DB_PASSWORD}'|g" /powerdns-admin/config.py
-  RUNDBCONFIG='yes'
-fi
-
-if [ ! -z $SQLA_DB_HOST ]; then
-  sed -i "s|SQLA_DB_HOST = 'mysqlhostorip'|SQLA_DB_HOST = '${SQLA_DB_HOST}'|g" /powerdns-admin/config.py
-  RUNDBCONFIG='yes'
-fi
-
-if [ ! -z $SQLA_DB_NAME ]; then
-  sed -i "s|SQLA_DB_NAME = 'powerdnsadmin'|SQLA_DB_NAME = '${SQLA_DB_NAME}'|g" /powerdns-admin/config.py
-  RUNDBCONFIG='yes'
-fi
+export DB_HOST = '${SQLA_DB_HOST}'
+export DB_USER = '${SQLA_DB_USER}'
+export DB_NAME = '${SQLA_DB_NAME}'
+export DB_PASSWORD = '${SQLA_DB_PASSWORD}'
 
 sed -i "s|LDAP_ENABLED = False|LDAP_ENABLED = True|g" /powerdns-admin/config.py
 
@@ -63,13 +39,8 @@ if [ ! -z $LDAP_FILTER ]; then
   sed -i "s|LDAP_FILTER = '(objectClass=inetorgperson)'|LDAP_FILTER = '${LDAP_FILTER}'|g" /powerdns-admin/config.py
 fi
 
-if [ ! -z $PDNS_STATS_URL ]; then
-  sed -i "s|PDNS_STATS_URL = 'http://172.16.214.131:8081/'|PDNS_STATS_URL = '${PDNS_STATS_URL}'|g" /powerdns-admin/config.py
-fi
-
-if [ ! -z $PDNS_API_KEY ]; then
-  sed -i "s|PDNS_API_KEY = 'you never know'|PDNS_API_KEY = '${PDNS_API_KEY}'|g" /powerdns-admin/config.py
-fi
+export $PDNS_HOST = '${PDNS_STATS_URL}'
+export $PDNS_API_KEY = '${PDNS_API_KEY}'
 
 cd /powerdns-admin
 
