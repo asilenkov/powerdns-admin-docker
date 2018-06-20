@@ -39,8 +39,8 @@ if [ ! -z $LDAP_FILTER ]; then
   sed -i "s|LDAP_FILTER = '(objectClass=inetorgperson)'|LDAP_FILTER = '${LDAP_FILTER}'|g" /powerdns-admin/config.py
 fi
 
-export $PDNS_HOST = '${PDNS_STATS_URL}'
-export $PDNS_API_KEY = '${PDNS_API_KEY}'
+export PDNS_HOST = '${PDNS_STATS_URL}'
+export PDNS_API_KEY = '${PDNS_API_KEY}'
 
 cd /powerdns-admin
 
