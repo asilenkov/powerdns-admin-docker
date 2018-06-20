@@ -9,6 +9,8 @@ RUN apk update && \
     python-dev \
     libxml2-dev \
     libxslt-dev \
+    xmlsec-dev \
+    pkgconfig \
     py-pip \
     libffi-dev \
     openldap-dev \
